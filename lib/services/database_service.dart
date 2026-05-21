@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart' as p;
 import '../models/task.dart';
 
 class DatabaseService {
@@ -14,7 +12,7 @@ class DatabaseService {
 
   static Future<Database> _initDb() async {
     final dbPath = await getDatabasesPath();
-    final path = p.join(dbPath, 'todo_app.db');
+    final path = '$dbPath/todo_app.db';
     return openDatabase(
       path,
       version: 1,

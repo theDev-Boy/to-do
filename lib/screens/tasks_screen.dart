@@ -5,7 +5,6 @@ import '../theme/app_theme.dart';
 import '../widgets/task_tile.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/empty_state.dart';
-import '../widgets/category_icon.dart';
 import '../widgets/task_create_sheet.dart';
 
 class TasksScreen extends StatefulWidget {
@@ -46,11 +45,13 @@ class _TasksScreenState extends State<TasksScreen> {
                 IconButton(
                   icon: const Icon(Icons.check_circle_outline),
                   onPressed: provider.selectedIds.isNotEmpty
-                      ? () async {
-                          await provider.completeSelected();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Tasks completed')),
-                          );
+                      ? () {
+                          final messenger = ScaffoldMessenger.of(context);
+                          provider.completeSelected().then((_) {
+                            messenger.showSnackBar(
+                              const SnackBar(content: Text('Tasks completed')),
+                            );
+                          });
                         }
                       : null,
                 ),
@@ -139,7 +140,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                 Switch(
                                   value: provider.filterCompleted,
                                   onChanged: provider.setFilterCompleted,
-                                  activeColor: AppTheme.accentPrimary,
+                                  activeThumbColor: AppTheme.accentPrimary,
                                 ),
                               ],
                             ),

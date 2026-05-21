@@ -145,7 +145,6 @@ class StatsScreen extends StatelessWidget {
                           final count = history[i];
                           final max = history.reduce((a, b) => a > b ? a : b);
                           final heightRatio = max > 0 ? count / max : 0.0;
-                          final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
                           final now = DateTime.now();
                           // Offset to get correct day name
                           final dayOfWeek = now.subtract(Duration(days: 6 - i));

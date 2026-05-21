@@ -5,7 +5,6 @@ import '../models/task.dart';
 import '../providers/task_provider.dart';
 import '../theme/app_theme.dart';
 import 'category_icon.dart';
-import 'priority_badge.dart';
 
 class TaskCreateSheet extends StatefulWidget {
   final Task? task;
@@ -334,7 +333,7 @@ class _TaskCreateSheetState extends State<TaskCreateSheet> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: AppTheme.categoryNames.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
                       itemBuilder: (_, i) {
                         final active = _categoryIndex == i;
                         return GestureDetector(

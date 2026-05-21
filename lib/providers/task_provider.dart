@@ -64,10 +64,15 @@ class TaskProvider extends ChangeNotifier {
           cmp = b.priority.compareTo(a.priority);
           break;
         case 'dueDate':
-          if (a.dueDate == null && b.dueDate == null) cmp = 0;
-          else if (a.dueDate == null) cmp = 1;
-          else if (b.dueDate == null) cmp = -1;
-          else cmp = a.dueDate!.compareTo(b.dueDate!);
+          if (a.dueDate == null && b.dueDate == null) {
+            cmp = 0;
+          } else if (a.dueDate == null) {
+            cmp = 1;
+          } else if (b.dueDate == null) {
+            cmp = -1;
+          } else {
+            cmp = a.dueDate!.compareTo(b.dueDate!);
+          }
           break;
         case 'title':
           cmp = a.title.compareTo(b.title);
@@ -84,8 +89,12 @@ class TaskProvider extends ChangeNotifier {
   List<Task> get todayTasks {
     final now = DateTime.now();
     return _tasks.where((t) {
-      if (t.isCompleted) return false;
-      if (t.dueDate == null) return false;
+      if (t.isCompleted) {
+        return false;
+      }
+      if (t.dueDate == null) {
+        return false;
+      }
       return t.dueDate!.year == now.year &&
           t.dueDate!.month == now.month &&
           t.dueDate!.day == now.day;
@@ -97,14 +106,24 @@ class TaskProvider extends ChangeNotifier {
     final now = DateTime.now();
     final weekEnd = now.add(const Duration(days: 7));
     return _tasks.where((t) {
-      if (t.isCompleted) return false;
-      if (t.dueDate == null) return false;
+      if (t.isCompleted) {
+        return false;
+      }
+      if (t.dueDate == null) {
+        return false;
+      }
       return t.dueDate!.isAfter(now) && t.dueDate!.isBefore(weekEnd);
     }).toList()
       ..sort((a, b) {
-        if (a.dueDate == null && b.dueDate == null) return 0;
-        if (a.dueDate == null) return 1;
-        if (b.dueDate == null) return -1;
+        if (a.dueDate == null && b.dueDate == null) {
+          return 0;
+        }
+        if (a.dueDate == null) {
+          return 1;
+        }
+        if (b.dueDate == null) {
+          return -1;
+        }
         return a.dueDate!.compareTo(b.dueDate!);
       });
   }
@@ -308,7 +327,9 @@ class TaskProvider extends ChangeNotifier {
     for (int i = 6; i >= 0; i--) {
       final day = now.subtract(Duration(days: i));
       final count = _tasks.where((t) {
-        if (!t.isCompleted) return false;
+        if (!t.isCompleted) {
+          return false;
+        }
         return t.updatedAt.year == day.year &&
             t.updatedAt.month == day.month &&
             t.updatedAt.day == day.day;
