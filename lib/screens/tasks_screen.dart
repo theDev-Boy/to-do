@@ -63,12 +63,12 @@ class _TasksScreenState extends State<TasksScreen> {
                   onPressed: provider.selectedIds.isNotEmpty
                       ? () {
                           HapticService.medium();
-                          final messenger = ScaffoldMessenger.of(context);
                           provider.completeSelected().then((_) {
-                            messenger.showSnackBar(
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(this.context).showSnackBar(
                               const SnackBar(content: Text('Tasks completed')),
                             );
-                            showMinorConfetti(context);
+                            showMinorConfetti(this.context);
                           });
                         }
                       : null,

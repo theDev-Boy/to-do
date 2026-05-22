@@ -111,8 +111,9 @@ class _BulkActionBarState extends State<BulkActionBar>
                           onTap: () {
                             HapticService.medium();
                             SoundService.playBulkAction();
+                            // ignore: use_build_context_synchronously
                             provider.completeSelected().then((_) {
-                              if (mounted) showMinorConfetti(context);
+                              if (mounted) showMinorConfetti(this.context);
                             });
                           },
                         ),
@@ -130,14 +131,15 @@ class _BulkActionBarState extends State<BulkActionBar>
                                 .toList();
                             final deletedIds = Set<String>.from(provider.selectedIds);
 
+                            // ignore: use_build_context_synchronously
                             provider.deleteSelected().then((_) {
                               if (!mounted) return;
                               showUndoToast(
-                                context,
+                                this.context,
                                 message: 'Deleted ${deletedIds.length} tasks',
                                 description: taskNames.join(', '),
                                 onUndo: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  ScaffoldMessenger.of(this.context).showSnackBar(
                                     SnackBar(
                                       content: const Text('Undo is not yet implemented'),
                                       backgroundColor: const Color(0xFF0A0A12),
@@ -199,7 +201,7 @@ class _BulkActionBarState extends State<BulkActionBar>
                           icon: Icons.calendar_today,
                           label: 'Due Date',
                           color: AppTheme.accentBlue,
-                          onTap: () => _showDatePicker(context, provider),
+                          onTap: () => _showDatePicker(provider),
                         ),
                         _ActionChip(
                           icon: Icons.label_outline,
@@ -372,7 +374,7 @@ class _BulkActionBarState extends State<BulkActionBar>
     );
   }
 
-  void _showDatePicker(BuildContext context, TaskProvider provider) async {
+  void _showDatePicker(TaskProvider provider) async {
     final now = DateTime.now();
     final date = await showDatePicker(
       context: context,
