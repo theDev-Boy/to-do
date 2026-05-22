@@ -1,3 +1,5 @@
+class _Sentinel { const _Sentinel(); }
+
 class SubTask {
   final String id;
   String title;
@@ -179,11 +181,13 @@ class Task {
     );
   }
 
+  static const _sentinel = _Sentinel();
+
   Task copyWith({
     String? title,
     String? description,
     int? priority,
-    DateTime? dueDate,
+    Object? dueDate = _sentinel,
     int? categoryIndex,
     List<String>? tags,
     List<SubTask>? subtasks,
@@ -191,14 +195,14 @@ class Task {
     bool? isInProgress,
     int? focusSessions,
     bool? isArchived,
-    DateTime? reminderTime,
+    Object? reminderTime = _sentinel,
   }) {
     return Task(
       id: id,
       title: title ?? this.title,
       description: description ?? this.description,
       priority: priority ?? this.priority,
-      dueDate: dueDate ?? this.dueDate,
+      dueDate: dueDate == _sentinel ? this.dueDate : dueDate as DateTime?,
       categoryIndex: categoryIndex ?? this.categoryIndex,
       tags: tags ?? this.tags,
       subtasks: subtasks ?? this.subtasks,
@@ -208,7 +212,7 @@ class Task {
       isInProgress: isInProgress ?? this.isInProgress,
       focusSessions: focusSessions ?? this.focusSessions,
       isArchived: isArchived ?? this.isArchived,
-      reminderTime: reminderTime ?? this.reminderTime,
+      reminderTime: reminderTime == _sentinel ? this.reminderTime : reminderTime as DateTime?,
     );
   }
 }

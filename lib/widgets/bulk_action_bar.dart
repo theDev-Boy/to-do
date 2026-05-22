@@ -142,7 +142,7 @@ class _BulkActionBarState extends State<BulkActionBar>
                                   ScaffoldMessenger.of(this.context).showSnackBar(
                                     SnackBar(
                                       content: const Text('Undo is not yet implemented'),
-                                      backgroundColor: const Color(0xFF0A0A12),
+                                      backgroundColor: AppTheme.snackbarBg,
                                     ),
                                   );
                                 },
@@ -180,7 +180,7 @@ class _BulkActionBarState extends State<BulkActionBar>
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Duplicated ${provider.selectedIds.length} tasks'),
-                                backgroundColor: const Color(0xFF0A0A12),
+                                backgroundColor: AppTheme.snackbarBg,
                               ),
                             );
                           },
@@ -212,7 +212,7 @@ class _BulkActionBarState extends State<BulkActionBar>
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: const Text('Exporting selected tasks...'),
-                                backgroundColor: const Color(0xFF0A0A12),
+                                backgroundColor: AppTheme.snackbarBg,
                               ),
                             );
                           },

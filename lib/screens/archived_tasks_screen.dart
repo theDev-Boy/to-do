@@ -137,9 +137,9 @@ class _ArchivedTaskTile extends StatelessWidget {
                 );
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Task duplicated'),
-                    backgroundColor: Color(0xFF0A0A12),
+                  SnackBar(
+                    content: const Text('Task duplicated'),
+                    backgroundColor: AppTheme.snackbarBg,
                   ),
                 );
               },
@@ -155,9 +155,9 @@ class _ArchivedTaskTile extends StatelessWidget {
                   provider.clearReminder(task);
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Reminder removed'),
-                      backgroundColor: Color(0xFF0A0A12),
+                    SnackBar(
+                      content: const Text('Reminder removed'),
+                      backgroundColor: AppTheme.snackbarBg,
                     ),
                   );
                 },
@@ -218,7 +218,7 @@ class _ArchivedTaskTile extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Reminder set for ${DateFormat('MMM d, HH:mm').format(reminderTime)}'),
-        backgroundColor: const Color(0xFF0A0A12),
+        backgroundColor: AppTheme.snackbarBg,
       ),
     );
   }

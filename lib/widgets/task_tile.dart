@@ -105,9 +105,9 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
               HapticService.medium();
               provider.clearReminder(task);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Reminder removed'),
-                  backgroundColor: Color(0xFF0A0A12),
+                SnackBar(
+                  content: const Text('Reminder removed'),
+                  backgroundColor: AppTheme.snackbarBg,
                 ),
               );
             },
@@ -161,7 +161,7 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
     ScaffoldMessenger.of(this.context).showSnackBar(
       SnackBar(
         content: Text('Reminder set for ${DateFormat('MMM d, HH:mm').format(reminderTime)}'),
-        backgroundColor: const Color(0xFF0A0A12),
+        backgroundColor: AppTheme.snackbarBg,
       ),
     );
   }

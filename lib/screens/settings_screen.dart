@@ -118,7 +118,7 @@ class SettingsScreen extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(newVal ? 'Haptics enabled' : 'Haptics disabled'),
-                      backgroundColor: const Color(0xFF0A0A12),
+                      backgroundColor: AppTheme.snackbarBg,
                     ),
                   );
                 },
@@ -137,7 +137,7 @@ class SettingsScreen extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(newVal ? 'Sounds enabled' : 'Sounds disabled'),
-                      backgroundColor: const Color(0xFF0A0A12),
+                      backgroundColor: AppTheme.snackbarBg,
                     ),
                   );
                 },

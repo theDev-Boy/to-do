@@ -10,6 +10,7 @@ class AppTheme {
   static const Color accentRed = Color(0xFFEF4444);
   static const Color accentGreen = Color(0xFF22C55E);
   static const Color accentBlue = Color(0xFF3B82F6);
+  static const Color snackbarBg = Color(0xFF1E1E28);
   static const Color textPrimary = Color(0xFFFFFFFF);
   static const Color textSecondary = Color(0x99FFFFFF);
   static const Color textPlaceholder = Color(0x59FFFFFF);
@@ -145,6 +146,12 @@ class AppTheme {
         ),
         hintStyle: const TextStyle(color: textPlaceholder),
         labelStyle: const TextStyle(color: textSecondary),
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: snackbarBg,
+        contentTextStyle: TextStyle(color: textPrimary),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: textPrimary, letterSpacing: -1),

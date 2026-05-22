@@ -187,14 +187,16 @@ class RemindersScreen extends StatelessWidget {
                               onPressed: () => _editReminder(context, task),
                               visualDensity: VisualDensity.compact,
                             ),
-                            // Delete button
-                            IconButton(
-                              icon: const Icon(Icons.close, size: 18, color: AppTheme.textSecondary),
-                              onPressed: () {
+                            // Delete button - GestureDetector to avoid Dismissible interference
+                            GestureDetector(
+                              onTap: () {
                                 HapticService.light();
                                 provider.clearReminder(task);
                               },
-                              visualDensity: VisualDensity.compact,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                child: const Icon(Icons.close, size: 18, color: AppTheme.textSecondary),
+                              ),
                             ),
                           ],
                         ),
