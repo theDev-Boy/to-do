@@ -21,8 +21,10 @@ void main() async {
 
   // Wire up notification tap/action callbacks
   NotificationService.onNotificationTap = (taskId) {
-    // When user taps a notification, navigate is handled by the tap handler
-    // The taskId is available for deep-linking
+    // Cancel notification when tapped so it disappears
+    if (taskId != null && taskId.isNotEmpty) {
+      NotificationService.cancelTaskNotifications(taskId);
+    }
   };
   NotificationService.onNotificationAction = (actionId, taskId) {
     if (taskId == null || taskId.isEmpty) return;

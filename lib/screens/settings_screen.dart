@@ -7,6 +7,7 @@ import '../widgets/glass_card.dart';
 import '../services/haptic_service.dart';
 import 'notification_settings_screen.dart';
 import 'reminders_screen.dart';
+import 'archived_tasks_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -153,6 +154,20 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
+              _SettingsTile(
+                icon: Icons.archive_outlined,
+                title: 'Archived Tasks',
+                subtitle: '${provider.archivedTasks.length} archived tasks',
+                iconColor: AppTheme.accentAmber,
+                onTap: () {
+                  HapticService.light();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ArchivedTasksScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
               _SettingsTile(
                 icon: Icons.cleaning_services_outlined,
                 title: 'Clear Completed Tasks',

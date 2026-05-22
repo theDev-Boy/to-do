@@ -95,6 +95,23 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
           label: 'Set Reminder',
           onTap: () => _showReminderPicker(context, provider, task),
         ),
+        // Unset reminder option - only show when reminder is set
+        if (task.reminderTime != null)
+          ContextMenuOption(
+            icon: Icons.alarm_off_outlined,
+            label: 'Unset Reminder',
+            color: AppTheme.accentRed,
+            onTap: () {
+              HapticService.medium();
+              provider.clearReminder(task);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Reminder removed'),
+                  backgroundColor: Color(0xFF0A0A12),
+                ),
+              );
+            },
+          ),
         ContextMenuOption(
           icon: Icons.archive_outlined,
           label: task.isArchived ? 'Unarchive' : 'Archive',
@@ -396,9 +413,26 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
                           if (task.reminderTime != null) ...[
                             const SizedBox(width: 12),
                             Icon(
-                              Icons.alarm_outlined,
+                              Icons.alarm,
                               size: 12,
                               color: AppTheme.accentAmber,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Set',
+                              style: const TextStyle(
+                                color: AppTheme.accentAmber,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ] else ...[
+                            const SizedBox(width: 12),
+                            Text(
+                              'Not set',
+                              style: const TextStyle(
+                                color: AppTheme.textPlaceholder,
+                                fontSize: 11,
+                              ),
                             ),
                           ],
                           if (task.subtasks.isNotEmpty) ...[

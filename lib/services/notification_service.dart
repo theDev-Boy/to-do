@@ -76,8 +76,10 @@ class NotificationService {
       priority: Priority.max,
       playSound: true,
       enableVibration: true,
-      ongoing: true,
-      autoCancel: false,
+      ongoing: false,
+      autoCancel: true,
+      fullScreenIntent: true,
+      category: AndroidNotificationCategory.alarm,
       actions: <AndroidNotificationAction>[
         const AndroidNotificationAction('complete', 'Complete'),
         const AndroidNotificationAction('snooze_10', 'Snooze 10min'),
@@ -144,6 +146,8 @@ class NotificationService {
       priority: Priority.max,
       playSound: true,
       enableVibration: true,
+      fullScreenIntent: true,
+      category: AndroidNotificationCategory.alarm,
     );
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
