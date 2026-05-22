@@ -168,24 +168,31 @@ class _MenuItem extends StatelessWidget {
             indent: 16,
             endIndent: 16,
           ),
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Icon(icon, size: 18, color: c),
-                const SizedBox(width: 12),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: c,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            focusColor: Colors.transparent,
+            highlightColor: Colors.white.withValues(alpha: 0.08),
+            hoverColor: Colors.transparent,
+            splashColor: Colors.white.withValues(alpha: 0.12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Icon(icon, size: 18, color: c),
+                  const SizedBox(width: 12),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: c,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

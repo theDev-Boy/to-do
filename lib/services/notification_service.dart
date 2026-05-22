@@ -19,6 +19,9 @@ class NotificationService {
     return _instance!;
   }
 
+  /// Handle notification action callbacks (Complete, Snooze, etc.)
+  static void Function(String actionId, String? taskId)? onNotificationAction;
+
   static Future<void> initialize() async {
     if (_initialized) return;
 
@@ -37,7 +40,13 @@ class NotificationService {
     await _plugin.initialize(
       settings: settings,
       onDidReceiveNotificationResponse: (response) {
-        onNotificationTap?.call(response.payload);
+        // If there's an actionId, route to action handler
+        if (response.actionId != null && response.actionId!.isNotEmpty) {
+          onNotificationAction?.call(response.actionId!, response.payload);
+        } else {
+          // Regular tap (no action button) — route to tap handler
+          onNotificationTap?.call(response.payload);
+        }
       },
     );
 
@@ -63,8 +72,8 @@ class NotificationService {
       'overdue_channel',
       'Overdue Tasks',
       channelDescription: 'Repeating reminders for overdue tasks',
-      importance: Importance.high,
-      priority: Priority.high,
+      importance: Importance.max,
+      priority: Priority.max,
       playSound: true,
       enableVibration: true,
       ongoing: true,
@@ -101,13 +110,15 @@ class NotificationService {
       'due_soon_channel',
       'Due Soon',
       channelDescription: 'Reminders for tasks due soon',
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
+      importance: Importance.high,
+      priority: Priority.high,
       playSound: true,
+      enableVibration: true,
     );
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
+      presentSound: true,
     );
 
     final details = NotificationDetails(
@@ -129,8 +140,8 @@ class NotificationService {
       'reminder_channel',
       'Task Reminders',
       channelDescription: 'Exact task reminders',
-      importance: Importance.high,
-      priority: Priority.high,
+      importance: Importance.max,
+      priority: Priority.max,
       playSound: true,
       enableVibration: true,
     );
@@ -160,12 +171,14 @@ class NotificationService {
       'digest_channel',
       'Daily Digest',
       channelDescription: 'Daily task summary',
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
+      importance: Importance.high,
+      priority: Priority.high,
+      playSound: true,
     );
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
+      presentSound: true,
     );
 
     final details = NotificationDetails(
@@ -186,9 +199,10 @@ class NotificationService {
       'streak_channel',
       'Streak Milestones',
       channelDescription: 'Celebrate streak achievements',
-      importance: Importance.high,
-      priority: Priority.high,
+      importance: Importance.max,
+      priority: Priority.max,
       playSound: true,
+      enableVibration: true,
     );
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -214,9 +228,10 @@ class NotificationService {
       'focus_channel',
       'Focus Timer',
       channelDescription: 'Focus session notifications',
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
+      importance: Importance.high,
+      priority: Priority.high,
       playSound: true,
+      enableVibration: true,
     );
 
     final details = NotificationDetails(
@@ -252,8 +267,10 @@ class NotificationService {
       'test_channel',
       'Test',
       channelDescription: 'Test notifications',
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
+      importance: Importance.high,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
     );
     const details = NotificationDetails(android: androidDetails);
     await _plugin.show(

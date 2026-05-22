@@ -285,9 +285,12 @@ class NotificationProvider extends ChangeNotifier {
   final Map<String, DateTime> _lastOverdueNotification = {};
 
   // Check if task is overdue and fire notification
+  // Only fires for tasks where the user explicitly set a reminder
   Future<void> checkOverdueTask(Task task, List<Task> allTasks) async {
     if (!_notificationsEnabled || !_overdueRepeaterEnabled) return;
     if (task.isCompleted || task.dueDate == null) return;
+    // Only fire if user explicitly set a reminder for this task
+    if (task.reminderTime == null) return;
 
     final now = DateTime.now();
     if (now.isAfter(task.dueDate!)) {

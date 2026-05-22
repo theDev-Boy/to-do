@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/task_provider.dart';
 import 'providers/notification_provider.dart';
+import 'services/notification_service.dart';
+import 'models/task.dart';
 import 'theme/app_theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/tasks_screen.dart';
@@ -16,11 +18,58 @@ void main() async {
   
   final notificationProvider = NotificationProvider();
   await notificationProvider.initialize();
+
+  // Wire up notification tap/action callbacks
+  NotificationService.onNotificationTap = (taskId) {
+    // When user taps a notification, navigate is handled by the tap handler
+    // The taskId is available for deep-linking
+  };
+  NotificationService.onNotificationAction = (actionId, taskId) {
+    if (taskId == null || taskId.isEmpty) return;
+    
+    final task = taskProvider.tasks.where((t) => t.id == taskId).firstOrNull;
+    if (task == null) return;
+
+    switch (actionId) {
+      case 'complete':
+        taskProvider.toggleComplete(task);
+        // Cancel the notification on complete
+        NotificationService.cancelTaskNotifications(taskId);
+        break;
+      case 'snooze_10':
+        NotificationService.cancelTaskNotifications(taskId);
+        _scheduleSnoozedNotification(task, 10, notificationProvider);
+        break;
+      case 'snooze_30':
+        NotificationService.cancelTaskNotifications(taskId);
+        _scheduleSnoozedNotification(task, 30, notificationProvider);
+        break;
+      case 'snooze_60':
+        NotificationService.cancelTaskNotifications(taskId);
+        _scheduleSnoozedNotification(task, 60, notificationProvider);
+        break;
+    }
+  };
   
   runApp(MyApp(
     taskProvider: taskProvider,
     notificationProvider: notificationProvider,
   ));
+}
+
+/// Schedule a notification after [minutes] snooze delay
+void _scheduleSnoozedNotification(Task task, int minutes, NotificationProvider provider) {
+  // Use a delayed callback since flutter_local_notifications doesn't have
+  // a built-in schedule with delay; we post a delayed show instead
+  Future.delayed(Duration(minutes: minutes), () async {
+    if (task.isCompleted) return;
+    if (task.dueDate != null && task.dueDate!.isBefore(DateTime.now())) {
+      final diff = DateTime.now().difference(task.dueDate!);
+      await NotificationService.showOverdueNotification(task, diff.inMinutes);
+    } else {
+      await NotificationService.showReminderNotification(task);
+    }
+  });
 }
 
 class MyApp extends StatelessWidget {
