@@ -6,6 +6,9 @@ import '../widgets/task_tile.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/task_create_sheet.dart';
+import '../widgets/bulk_action_bar.dart';
+import '../widgets/confetti_overlay.dart';
+import '../services/haptic_service.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -35,7 +38,10 @@ class _TasksScreenState extends State<TasksScreen> {
                     _showFilters ? Icons.filter_list : Icons.filter_list_outlined,
                     color: _showFilters ? AppTheme.accentPrimary : AppTheme.textPrimary,
                   ),
-                  onPressed: () => setState(() => _showFilters = !_showFilters),
+                  onPressed: () {
+                    HapticService.light();
+                    setState(() => _showFilters = !_showFilters);
+                  },
                 ),
                 IconButton(
                   icon: const Icon(Icons.search_outlined),
@@ -43,14 +49,26 @@ class _TasksScreenState extends State<TasksScreen> {
                 ),
               ] else ...[
                 IconButton(
+                  icon: const Icon(Icons.select_all),
+                  onPressed: () {
+                    if (provider.selectedIds.length == filtered.length) {
+                      provider.deselectAll();
+                    } else {
+                      provider.selectAll();
+                    }
+                  },
+                ),
+                IconButton(
                   icon: const Icon(Icons.check_circle_outline),
                   onPressed: provider.selectedIds.isNotEmpty
                       ? () {
+                          HapticService.medium();
                           final messenger = ScaffoldMessenger.of(context);
                           provider.completeSelected().then((_) {
                             messenger.showSnackBar(
                               const SnackBar(content: Text('Tasks completed')),
                             );
+                            showMinorConfetti(context);
                           });
                         }
                       : null,
@@ -63,7 +81,10 @@ class _TasksScreenState extends State<TasksScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
-                  onPressed: provider.toggleSelectMode,
+                  onPressed: () {
+                    HapticService.light();
+                    provider.cancelSelectMode();
+                  },
                 ),
               ],
             ],
@@ -196,42 +217,57 @@ class _TasksScreenState extends State<TasksScreen> {
 
               // Task list
               Expanded(
-                child: filtered.isEmpty
-                    ? EmptyState(
-                        icon: Icons.task_alt,
-                        title: provider.searchQuery.isNotEmpty
-                            ? 'No tasks found'
-                            : 'No tasks yet',
-                        subtitle: provider.searchQuery.isNotEmpty
-                            ? 'Try a different search'
-                            : 'Tap + to create your first task',
-                        action: provider.searchQuery.isNotEmpty
-                            ? TextButton(
-                                onPressed: () => provider.setSearch(''),
-                                child: const Text('Clear search'),
-                              )
-                            : null,
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: filtered.length,
-                        itemBuilder: (_, i) => TaskTile(
-                          task: filtered[i],
-                          selectMode: provider.isSelectMode,
-                          isSelected: provider.selectedIds.contains(filtered[i].id),
-                          onTap: () => TaskCreateSheet.show(context, task: filtered[i]),
-                          onToggleComplete: () => provider.toggleComplete(filtered[i]),
-                          onDelete: () => provider.deleteTask(filtered[i].id),
-                          onSelectToggle: (selected) => provider.toggleSelected(filtered[i].id),
-                        ),
+                child: Stack(
+                  children: [
+                    filtered.isEmpty
+                        ? EmptyState(
+                            icon: Icons.task_alt,
+                            title: provider.searchQuery.isNotEmpty
+                                ? 'No tasks found'
+                                : 'No tasks yet',
+                            subtitle: provider.searchQuery.isNotEmpty
+                                ? 'Try a different search'
+                                : 'Tap + to create your first task',
+                            action: provider.searchQuery.isNotEmpty
+                                ? TextButton(
+                                    onPressed: () => provider.setSearch(''),
+                                    child: const Text('Clear search'),
+                                  )
+                                : null,
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: filtered.length,
+                            itemBuilder: (_, i) => TaskTile(
+                              task: filtered[i],
+                              selectMode: provider.isSelectMode,
+                              isSelected: provider.selectedIds.contains(filtered[i].id),
+                              onTap: () => TaskCreateSheet.show(context, task: filtered[i]),
+                              onToggleComplete: () => provider.toggleComplete(filtered[i]),
+                              onDelete: () => provider.deleteTask(filtered[i].id),
+                              onSelectToggle: (selected) => provider.toggleSelected(filtered[i].id),
+                            ),
+                          ),
+
+                    // Bulk action bar
+                    if (provider.isSelectMode)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: const BulkActionBar(),
                       ),
+                  ],
+                ),
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => TaskCreateSheet.show(context),
-            child: const Icon(Icons.add),
-          ),
+          floatingActionButton: provider.isSelectMode
+              ? null
+              : FloatingActionButton(
+                  onPressed: () => TaskCreateSheet.show(context),
+                  child: const Icon(Icons.add),
+                ),
         );
       },
     );
@@ -318,7 +354,7 @@ class _TasksScreenState extends State<TasksScreen> {
               prefixIcon: Icon(Icons.search, color: AppTheme.textSecondary),
             ),
             onSubmitted: (v) {
-              provider.setSearch(v.trim());
+              provider.setSearch(v);
               Navigator.pop(ctx);
             },
           ),
@@ -332,7 +368,7 @@ class _TasksScreenState extends State<TasksScreen> {
             ),
             TextButton(
               onPressed: () {
-                provider.setSearch(ctrl.text.trim());
+                provider.setSearch(ctrl.text);
                 Navigator.pop(ctx);
               },
               child: const Text('Search'),

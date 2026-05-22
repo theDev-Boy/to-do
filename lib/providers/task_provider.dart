@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/task.dart';
 import '../services/database_service.dart';
+import '../services/sanitizer.dart';
 
 class TaskProvider extends ChangeNotifier {
   List<Task> _tasks = [];
@@ -144,6 +145,24 @@ class TaskProvider extends ChangeNotifier {
 
   // --- Methods ---
 
+  void cancelSelectMode() {
+    _isSelectMode = false;
+    _selectedIds.clear();
+    notifyListeners();
+  }
+
+  void selectAll() {
+    for (final task in filteredTasks) {
+      _selectedIds.add(task.id);
+    }
+    notifyListeners();
+  }
+
+  void deselectAll() {
+    _selectedIds.clear();
+    notifyListeners();
+  }
+
   Future<void> loadTasks() async {
     _isLoading = true;
     notifyListeners();
@@ -161,15 +180,23 @@ class TaskProvider extends ChangeNotifier {
     List<String>? tags,
     List<SubTask>? subtasks,
   }) async {
+    // Sanitize all user-provided inputs at provider boundary
+    final sanitizedTitle = Sanitizer.sanitizeTitle(title);
+    if (sanitizedTitle.isEmpty) return;
+
     final task = Task(
       id: const Uuid().v4(),
-      title: title,
-      description: description,
-      priority: priority,
+      title: sanitizedTitle,
+      description: Sanitizer.sanitizeDescription(description),
+      priority: Sanitizer.validatePriority(priority),
       dueDate: dueDate,
-      categoryIndex: categoryIndex,
-      tags: tags,
-      subtasks: subtasks,
+      categoryIndex: Sanitizer.validateCategoryIndex(categoryIndex, 8),
+      tags: tags != null ? Sanitizer.sanitizeTags(tags) : null,
+      subtasks: subtasks?.map((s) => SubTask(
+            id: s.id,
+            title: Sanitizer.sanitizeSubtaskTitle(s.title),
+            isCompleted: s.isCompleted,
+          )).toList(),
     );
     await DatabaseService.insertTask(task);
     _tasks.insert(0, task);
@@ -256,7 +283,7 @@ class TaskProvider extends ChangeNotifier {
   }
 
   void setSearch(String query) {
-    _searchQuery = query;
+    _searchQuery = Sanitizer.sanitizeSearchQuery(query);
     notifyListeners();
   }
 

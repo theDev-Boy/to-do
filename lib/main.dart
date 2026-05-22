@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/task_provider.dart';
+import 'providers/notification_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/tasks_screen.dart';
@@ -9,21 +10,38 @@ import 'screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   final taskProvider = TaskProvider();
   await taskProvider.loadTasks();
-  runApp(MyApp(taskProvider: taskProvider));
+  
+  final notificationProvider = NotificationProvider();
+  await notificationProvider.initialize();
+  
+  runApp(MyApp(
+    taskProvider: taskProvider,
+    notificationProvider: notificationProvider,
+  ));
 }
 
 class MyApp extends StatelessWidget {
   final TaskProvider taskProvider;
-  const MyApp({super.key, required this.taskProvider});
+  final NotificationProvider notificationProvider;
+  
+  const MyApp({
+    super.key,
+    required this.taskProvider,
+    required this.notificationProvider,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: taskProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: taskProvider),
+        ChangeNotifierProvider.value(value: notificationProvider),
+      ],
       child: MaterialApp(
-        title: 'To-Do App',
+        title: 'Finishly',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
         home: const AppShell(),

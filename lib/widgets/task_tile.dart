@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/task.dart';
 import '../theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'priority_badge.dart';
 import 'category_icon.dart';
+import 'context_menu.dart';
+import '../services/haptic_service.dart';
+import '../providers/task_provider.dart';
 
 class TaskTile extends StatefulWidget {
   final Task task;
@@ -53,7 +57,209 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
 
   void _onDelete() {
     setState(() => _isDeleted = true);
+    HapticService.heavy();
     _animController.reverse().then((_) => widget.onDelete());
+  }
+
+  void _showContextMenu(BuildContext context) {
+    final pos = (context.findRenderObject() as RenderBox?)?.localToGlobal(Offset.zero) ?? Offset.zero;
+    final task = widget.task;
+    final provider = context.read<TaskProvider>();
+
+    showContextMenu(
+      context,
+      position: pos,
+      options: [
+        ContextMenuOption(
+          icon: Icons.content_copy,
+          label: 'Duplicate',
+          onTap: () {
+            provider.addTask(
+              title: '[Copy] ${task.title}',
+              description: task.description,
+              priority: task.priority,
+              dueDate: task.dueDate,
+              categoryIndex: task.categoryIndex,
+              tags: List.from(task.tags),
+            );
+            HapticService.light();
+          },
+        ),
+        ContextMenuOption(
+          icon: Icons.drive_file_move_outline,
+          label: 'Move',
+          onTap: () => _showMoveCategoryPicker(context, provider, task),
+          showDividerAbove: true,
+        ),
+        ContextMenuOption(
+          icon: Icons.flag_outlined,
+          label: 'Change Priority',
+          onTap: () => _showPriorityPicker(context, provider, task),
+        ),
+        ContextMenuOption(
+          icon: Icons.alarm_add_outlined,
+          label: 'Add Reminder',
+          onTap: () {
+            HapticService.light();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Reminder set'),
+                backgroundColor: Color(0xFF0A0A12),
+              ),
+            );
+          },
+        ),
+        ContextMenuOption(
+          icon: Icons.archive_outlined,
+          label: 'Archive',
+          onTap: () {
+            HapticService.medium();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Task archived'),
+                backgroundColor: Color(0xFF0A0A12),
+              ),
+            );
+          },
+          showDividerAbove: true,
+        ),
+        ContextMenuOption(
+          icon: Icons.delete_outline,
+          label: 'Delete',
+          color: AppTheme.accentRed,
+          onTap: () => _onDelete(),
+        ),
+      ],
+    );
+  }
+
+  void _showMoveCategoryPicker(BuildContext context, TaskProvider provider, Task task) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0A0A12),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border(top: BorderSide(color: AppTheme.borderLight)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Center(
+              child: SizedBox(
+                width: 40,
+                height: 4,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppTheme.textPlaceholder,
+                    borderRadius: BorderRadius.all(Radius.circular(2)),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Move to Category',
+              style: TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...List.generate(AppTheme.categoryNames.length, (i) {
+              return ListTile(
+                leading: Icon(
+                  Icons.folder_outlined,
+                  color: AppTheme.categoryColors[i],
+                  size: 22,
+                ),
+                title: Text(
+                  AppTheme.categoryNames[i],
+                  style: const TextStyle(color: AppTheme.textPrimary),
+                ),
+                onTap: () {
+                  final updated = task.copyWith(categoryIndex: i);
+                  provider.updateTask(updated);
+                  HapticService.light();
+                  Navigator.pop(ctx);
+                },
+              );
+            }),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPriorityPicker(BuildContext context, TaskProvider provider, Task task) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0A0A12),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border(top: BorderSide(color: AppTheme.borderLight)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Center(
+              child: SizedBox(
+                width: 40,
+                height: 4,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppTheme.textPlaceholder,
+                    borderRadius: BorderRadius.all(Radius.circular(2)),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Change Priority',
+              style: TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...List.generate(5, (i) {
+              return ListTile(
+                leading: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: AppTheme.priorityColor(i),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                title: Text(
+                  i == 0 ? 'None' : AppTheme.priorityLabel(i),
+                  style: const TextStyle(color: AppTheme.textPrimary),
+                ),
+                onTap: () {
+                  final updated = task.copyWith(priority: i);
+                  provider.updateTask(updated);
+                  HapticService.light();
+                  Navigator.pop(ctx);
+                },
+              );
+            }),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -107,7 +313,7 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
               : widget.onTap,
           onLongPress: () {
             if (!widget.selectMode) {
-              widget.onSelectToggle?.call(true);
+              _showContextMenu(context);
             }
           },
           child: AnimatedContainer(

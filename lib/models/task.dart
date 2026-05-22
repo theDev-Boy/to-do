@@ -87,7 +87,7 @@ class Task {
         'priority': priority,
         'dueDate': dueDate?.millisecondsSinceEpoch,
         'categoryIndex': categoryIndex,
-        'tags': tags.join(','),
+        'tags': _encodeTags(tags),
         'subtasks': subtasks.map((s) => s.toJson()).toList(),
         'isCompleted': isCompleted ? 1 : 0,
         'createdAt': createdAt.millisecondsSinceEpoch,
@@ -96,33 +96,80 @@ class Task {
         'focusSessions': focusSessions,
       };
 
-  factory Task.fromJson(Map<String, dynamic> json) => Task(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        description: (json['description'] as String?) ?? '',
-        priority: (json['priority'] as int?) ?? 0,
-        dueDate: json['dueDate'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(json['dueDate'] as int)
-            : null,
-        categoryIndex: (json['categoryIndex'] as int?) ?? 0,
-        tags: (json['tags'] as String?) != null && (json['tags'] as String).isNotEmpty
-            ? (json['tags'] as String).split(',')
-            : [],
-        subtasks: json['subtasks'] != null
-            ? (json['subtasks'] as List)
-                .map((s) => SubTask.fromJson(s as Map<String, dynamic>))
-                .toList()
-            : [],
-        isCompleted: (json['isCompleted'] as int?) == 1,
-        createdAt: json['createdAt'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(json['createdAt'] as int)
-            : DateTime.now(),
-        updatedAt: json['updatedAt'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] as int)
-            : DateTime.now(),
-        isInProgress: (json['isInProgress'] as int?) == 1,
-        focusSessions: (json['focusSessions'] as int?) ?? 0,
-      );
+  /// Securely encode tags list using a delimiter unlikely in user input.
+  static String _encodeTags(List<String> tags) {
+    return tags.join('|||');
+  }
+
+  /// Securely decode tags string, handling malformed or null data gracefully.
+  static List<String> _decodeTags(String? raw) {
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      return raw.split('|||').where((t) => t.trim().isNotEmpty).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  factory Task.fromJson(Map<String, dynamic> json) {
+    // Safe deserialization with type guards against malformed data
+    final id = (json['id'] as String?) ?? '';
+    final title = (json['title'] as String?) ?? '';
+    final description = (json['description'] as String?) ?? '';
+    final priority = (json['priority'] as int?) ?? 0;
+    final categoryIndex = (json['categoryIndex'] as int?) ?? 0;
+    final isCompleted = (json['isCompleted'] as int?) == 1;
+    final isInProgress = (json['isInProgress'] as int?) == 1;
+    final focusSessions = (json['focusSessions'] as int?) ?? 0;
+
+    // Safe timestamp parsing with range validation
+    DateTime? parseSafeDateTime(dynamic value) {
+      if (value is int && value > 0) {
+        // Reject unreasonably large/small timestamps (year ~1900-2100)
+        if (value < -2208988800000 || value > 4102444800000) return null;
+        return DateTime.fromMillisecondsSinceEpoch(value);
+      }
+      return null;
+    }
+
+    final dueDate = parseSafeDateTime(json['dueDate']);
+    final createdAt = parseSafeDateTime(json['createdAt']) ?? DateTime.now();
+    final updatedAt = parseSafeDateTime(json['updatedAt']) ?? DateTime.now();
+
+    // Parse tags with secure decoder
+    final tags = _decodeTags(json['tags'] as String?);
+
+    // Parse subtasks with type guards
+    List<SubTask> subtasks = [];
+    final rawSubtasks = json['subtasks'];
+    if (rawSubtasks is List) {
+      subtasks = rawSubtasks
+          .whereType<Map<String, dynamic>>()
+          .map((m) {
+            final subId = (m['id'] as String?) ?? '';
+            final subTitle = (m['title'] as String?) ?? '';
+            final subCompleted = (m['isCompleted'] as int?) == 1;
+            return SubTask(id: subId, title: subTitle, isCompleted: subCompleted);
+          })
+          .toList();
+    }
+
+    return Task(
+      id: id,
+      title: title,
+      description: description,
+      priority: priority.clamp(0, 4),
+      dueDate: dueDate,
+      categoryIndex: categoryIndex,
+      tags: tags,
+      subtasks: subtasks,
+      isCompleted: isCompleted,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      isInProgress: isInProgress,
+      focusSessions: focusSessions,
+    );
+  }
 
   Task copyWith({
     String? title,

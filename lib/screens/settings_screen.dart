@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
+import '../providers/notification_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/glass_card.dart';
+import '../services/haptic_service.dart';
+import 'notification_settings_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<TaskProvider>(
-      builder: (context, provider, _) {
+    return Consumer2<TaskProvider, NotificationProvider>(
+      builder: (context, provider, notifProvider, _) {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Settings'),
@@ -39,20 +42,89 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     const Text(
-                      'To-Do App',
+                      'Finishly',
                       style: TextStyle(
                         color: AppTheme.textPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Your personal task manager',
+                      'Your premium task manager',
                       style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 24),
+
+              // Notifications section
+              const Text(
+                'Preferences',
+                style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _SettingsTile(
+                icon: Icons.notifications_outlined,
+                title: 'Notifications',
+                subtitle: notifProvider.notificationsEnabled
+                    ? 'Enabled'
+                    : 'Disabled',
+                iconColor: notifProvider.notificationsEnabled
+                    ? AppTheme.accentPrimary
+                    : AppTheme.textSecondary,
+                onTap: () {
+                  HapticService.light();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NotificationSettingsScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              _SettingsTile(
+                icon: Icons.vibration,
+                title: 'Haptic Feedback',
+                subtitle: notifProvider.hapticEnabled ? 'On' : 'Off',
+                iconColor: notifProvider.hapticEnabled
+                    ? AppTheme.accentPrimary
+                    : AppTheme.textSecondary,
+                onTap: () {
+                  final newVal = !notifProvider.hapticEnabled;
+                  notifProvider.setHapticEnabled(newVal);
+                  HapticService.setEnabled(newVal);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(newVal ? 'Haptics enabled' : 'Haptics disabled'),
+                      backgroundColor: const Color(0xFF0A0A12),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              _SettingsTile(
+                icon: Icons.volume_up_outlined,
+                title: 'Sound Effects',
+                subtitle: notifProvider.soundEnabled ? 'On' : 'Off',
+                iconColor: notifProvider.soundEnabled
+                    ? AppTheme.accentAmber
+                    : AppTheme.textSecondary,
+                onTap: () {
+                  final newVal = !notifProvider.soundEnabled;
+                  notifProvider.setSoundEnabled(newVal);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(newVal ? 'Sounds enabled' : 'Sounds disabled'),
+                      backgroundColor: const Color(0xFF0A0A12),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 24),
 
@@ -95,8 +167,8 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _SettingsTile(
                 icon: Icons.info_outline,
-                title: 'Version',
-                subtitle: '1.0.0',
+                title: 'Finishly v1.0.0',
+                subtitle: 'Your premium task manager',
                 iconColor: AppTheme.accentBlue,
                 onTap: null,
               ),

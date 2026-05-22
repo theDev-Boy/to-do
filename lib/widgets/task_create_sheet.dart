@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/task.dart';
 import '../providers/task_provider.dart';
+import '../services/sanitizer.dart';
 import '../theme/app_theme.dart';
 import 'category_icon.dart';
 
@@ -61,8 +62,19 @@ class _TaskCreateSheetState extends State<TaskCreateSheet> {
   }
 
   Future<void> _save() async {
-    final title = _titleCtrl.text.trim();
+    // Sanitize all inputs before saving
+    final title = Sanitizer.sanitizeTitle(_titleCtrl.text);
     if (title.isEmpty) return;
+
+    final description = Sanitizer.sanitizeDescription(_descCtrl.text);
+    final sanitizedTags = Sanitizer.sanitizeTags(_tags);
+    final sanitizedSubtasks = _subtasks
+        .map((s) => SubTask(
+              id: s.id,
+              title: Sanitizer.sanitizeSubtaskTitle(s.title),
+              isCompleted: s.isCompleted,
+            ))
+        .toList();
 
     setState(() => _isSaving = true);
 
@@ -71,23 +83,23 @@ class _TaskCreateSheetState extends State<TaskCreateSheet> {
     if (_isEditing) {
       final updated = widget.task!.copyWith(
         title: title,
-        description: _descCtrl.text.trim(),
+        description: description,
         priority: _priority,
         dueDate: _dueDate,
         categoryIndex: _categoryIndex,
-        tags: List.from(_tags),
-        subtasks: List.from(_subtasks),
+        tags: sanitizedTags,
+        subtasks: sanitizedSubtasks,
       );
       await provider.updateTask(updated);
     } else {
       await provider.addTask(
         title: title,
-        description: _descCtrl.text.trim(),
+        description: description,
         priority: _priority,
         dueDate: _dueDate,
         categoryIndex: _categoryIndex,
-        tags: List.from(_tags),
-        subtasks: List.from(_subtasks),
+        tags: sanitizedTags,
+        subtasks: sanitizedSubtasks,
       );
     }
 
@@ -120,8 +132,8 @@ class _TaskCreateSheetState extends State<TaskCreateSheet> {
   }
 
   void _addTag() {
-    final tag = _tagCtrl.text.trim().toLowerCase();
-    if (tag.isNotEmpty && !_tags.contains(tag)) {
+    final tag = Sanitizer.sanitizeTag(_tagCtrl.text);
+    if (tag != null && !_tags.contains(tag)) {
       setState(() => _tags.add(tag));
       _tagCtrl.clear();
     }
@@ -140,7 +152,7 @@ class _TaskCreateSheetState extends State<TaskCreateSheet> {
           decoration: const InputDecoration(hintText: 'Subtask title'),
           style: const TextStyle(color: AppTheme.textPrimary),
           onSubmitted: (_) {
-            final text = ctrl.text.trim();
+            final text = Sanitizer.sanitizeSubtaskTitle(ctrl.text);
             if (text.isNotEmpty) {
               setState(() {
                 _subtasks.add(SubTask(
