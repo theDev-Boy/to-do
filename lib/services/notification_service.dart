@@ -42,6 +42,9 @@ class NotificationService {
     );
 
     _initialized = true;
+
+    // Request notification permissions on Android 13+
+    await requestPermissions();
   }
 
   static Future<bool> requestPermissions() async {
@@ -241,6 +244,10 @@ class NotificationService {
 
   static Future<void> sendTestNotification() async {
     if (!_initialized) return;
+
+    // Ensure permissions are granted before sending
+    await requestPermissions();
+
     const androidDetails = AndroidNotificationDetails(
       'test_channel',
       'Test',

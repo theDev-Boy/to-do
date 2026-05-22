@@ -36,6 +36,8 @@ class Task {
   DateTime updatedAt;
   bool isInProgress;
   int focusSessions;
+  bool isArchived;
+  DateTime? reminderTime;
 
   Task({
     required this.id,
@@ -51,6 +53,8 @@ class Task {
     DateTime? updatedAt,
     this.isInProgress = false,
     this.focusSessions = 0,
+    this.isArchived = false,
+    this.reminderTime,
   })  : tags = tags ?? [],
         subtasks = subtasks ?? [],
         createdAt = createdAt ?? DateTime.now(),
@@ -94,6 +98,8 @@ class Task {
         'updatedAt': updatedAt.millisecondsSinceEpoch,
         'isInProgress': isInProgress ? 1 : 0,
         'focusSessions': focusSessions,
+        'isArchived': isArchived ? 1 : 0,
+        'reminderTime': reminderTime?.millisecondsSinceEpoch,
       };
 
   /// Securely encode tags list using a delimiter unlikely in user input.
@@ -111,6 +117,14 @@ class Task {
     }
   }
 
+    static DateTime? parseSafeDateTime(dynamic value) {
+      if (value is int && value > 0) {
+        if (value < -2208988800000 || value > 4102444800000) return null;
+        return DateTime.fromMillisecondsSinceEpoch(value);
+      }
+      return null;
+    }
+
   factory Task.fromJson(Map<String, dynamic> json) {
     // Safe deserialization with type guards against malformed data
     final id = (json['id'] as String?) ?? '';
@@ -121,16 +135,8 @@ class Task {
     final isCompleted = (json['isCompleted'] as int?) == 1;
     final isInProgress = (json['isInProgress'] as int?) == 1;
     final focusSessions = (json['focusSessions'] as int?) ?? 0;
-
-    // Safe timestamp parsing with range validation
-    DateTime? parseSafeDateTime(dynamic value) {
-      if (value is int && value > 0) {
-        // Reject unreasonably large/small timestamps (year ~1900-2100)
-        if (value < -2208988800000 || value > 4102444800000) return null;
-        return DateTime.fromMillisecondsSinceEpoch(value);
-      }
-      return null;
-    }
+    final isArchived = (json['isArchived'] as int?) == 1;
+    final reminderTime = parseSafeDateTime(json['reminderTime']);
 
     final dueDate = parseSafeDateTime(json['dueDate']);
     final createdAt = parseSafeDateTime(json['createdAt']) ?? DateTime.now();
@@ -168,6 +174,8 @@ class Task {
       updatedAt: updatedAt,
       isInProgress: isInProgress,
       focusSessions: focusSessions,
+      isArchived: isArchived,
+      reminderTime: reminderTime,
     );
   }
 
@@ -182,6 +190,8 @@ class Task {
     bool? isCompleted,
     bool? isInProgress,
     int? focusSessions,
+    bool? isArchived,
+    DateTime? reminderTime,
   }) {
     return Task(
       id: id,
@@ -197,6 +207,8 @@ class Task {
       updatedAt: DateTime.now(),
       isInProgress: isInProgress ?? this.isInProgress,
       focusSessions: focusSessions ?? this.focusSessions,
+      isArchived: isArchived ?? this.isArchived,
+      reminderTime: reminderTime ?? this.reminderTime,
     );
   }
 }

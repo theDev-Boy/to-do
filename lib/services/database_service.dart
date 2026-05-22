@@ -18,7 +18,7 @@ class DatabaseService {
     final path = '$dbPath/todo_app.db';
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE tasks (
@@ -34,9 +34,17 @@ class DatabaseService {
             createdAt INTEGER NOT NULL,
             updatedAt INTEGER NOT NULL,
             isInProgress INTEGER DEFAULT 0,
-            focusSessions INTEGER DEFAULT 0
+            focusSessions INTEGER DEFAULT 0,
+            isArchived INTEGER DEFAULT 0,
+            reminderTime INTEGER
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('ALTER TABLE tasks ADD COLUMN isArchived INTEGER DEFAULT 0');
+          await db.execute('ALTER TABLE tasks ADD COLUMN reminderTime INTEGER');
+        }
       },
       // Enable foreign keys for data integrity
       onConfigure: (db) async {

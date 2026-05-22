@@ -103,7 +103,9 @@ class _ContextMenuState extends State<ContextMenu>
                           color: option.color,
                           onTap: () {
                             HapticService.light();
+                            // Execute the option action first
                             option.onTap();
+                            // Always dismiss the menu (it wraps the action)
                             _dismiss();
                           },
                           showDivider: i < widget.options.length - 1 &&
@@ -192,20 +194,23 @@ class _MenuItem extends StatelessWidget {
   }
 }
 
-// Helper to show context menu
+// Helper to show context menu as an OverlayEntry (not a dialog)
 void showContextMenu(
   BuildContext context, {
   required Offset position,
   required List<ContextMenuOption> options,
 }) {
   HapticService.medium();
-  showDialog(
-    context: context,
-    barrierColor: Colors.transparent,
-    builder: (_) => ContextMenu(
+
+  late OverlayEntry entry;
+  entry = OverlayEntry(
+    builder: (ctx) => ContextMenu(
       position: position,
       options: options,
-      onDismiss: () => Navigator.of(context).pop(),
+      onDismiss: () {
+        if (entry.mounted) entry.remove();
+      },
     ),
   );
+  Overlay.of(context).insert(entry);
 }

@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../widgets/glass_card.dart';
 import '../services/haptic_service.dart';
 import 'notification_settings_screen.dart';
+import 'reminders_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -84,6 +85,20 @@ class SettingsScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const NotificationSettingsScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              _SettingsTile(
+                icon: Icons.alarm_outlined,
+                title: 'Reminders',
+                subtitle: '${context.read<TaskProvider>().tasksWithReminders.length} active',
+                iconColor: AppTheme.accentAmber,
+                onTap: () {
+                  HapticService.light();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const RemindersScreen()),
                   );
                 },
               ),

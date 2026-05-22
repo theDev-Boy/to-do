@@ -31,7 +31,8 @@ class TaskProvider extends ChangeNotifier {
   Set<String> get selectedIds => _selectedIds;
 
   List<Task> get filteredTasks {
-    var list = List<Task>.from(_tasks);
+    // Exclude archived tasks by default
+    var list = _tasks.where((t) => !t.isArchived).toList();
 
     // Search
     if (_searchQuery.isNotEmpty) {
@@ -132,6 +133,14 @@ class TaskProvider extends ChangeNotifier {
   List<Task> get completedTasks =>
       _tasks.where((t) => t.isCompleted).toList()
         ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+  List<Task> get archivedTasks =>
+      _tasks.where((t) => t.isArchived).toList()
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+  List<Task> get tasksWithReminders =>
+      _tasks.where((t) => t.reminderTime != null && !t.isCompleted).toList()
+        ..sort((a, b) => a.reminderTime!.compareTo(b.reminderTime!));
 
   int get totalToday => todayTasks.length;
   int get completedToday =>
@@ -251,6 +260,38 @@ class TaskProvider extends ChangeNotifier {
     }
     _selectedIds.clear();
     _isSelectMode = false;
+    notifyListeners();
+  }
+
+  Future<void> archiveTask(Task task) async {
+    final updated = task.copyWith(isArchived: true);
+    await DatabaseService.updateTask(updated);
+    final idx = _tasks.indexWhere((t) => t.id == task.id);
+    if (idx >= 0) _tasks[idx] = updated;
+    notifyListeners();
+  }
+
+  Future<void> unarchiveTask(Task task) async {
+    final updated = task.copyWith(isArchived: false);
+    await DatabaseService.updateTask(updated);
+    final idx = _tasks.indexWhere((t) => t.id == task.id);
+    if (idx >= 0) _tasks[idx] = updated;
+    notifyListeners();
+  }
+
+  Future<void> clearReminder(Task task) async {
+    final updated = task.copyWith(reminderTime: null);
+    await DatabaseService.updateTask(updated);
+    final idx = _tasks.indexWhere((t) => t.id == task.id);
+    if (idx >= 0) _tasks[idx] = updated;
+    notifyListeners();
+  }
+
+  Future<void> setReminder(Task task, DateTime time) async {
+    final updated = task.copyWith(reminderTime: time);
+    await DatabaseService.updateTask(updated);
+    final idx = _tasks.indexWhere((t) => t.id == task.id);
+    if (idx >= 0) _tasks[idx] = updated;
     notifyListeners();
   }
 

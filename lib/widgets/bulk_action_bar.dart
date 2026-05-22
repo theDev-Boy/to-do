@@ -186,12 +186,6 @@ class _BulkActionBarState extends State<BulkActionBar>
                           },
                         ),
                         _ActionChip(
-                          icon: Icons.drive_file_move_outline,
-                          label: 'Move',
-                          color: AppTheme.accentAmber,
-                          onTap: () => _showCategoryPicker(context, provider),
-                        ),
-                        _ActionChip(
                           icon: Icons.flag_outlined,
                           label: 'Priority',
                           color: AppTheme.accentRed,
@@ -232,74 +226,6 @@ class _BulkActionBarState extends State<BulkActionBar>
           ),
         );
       },
-    );
-  }
-
-  void _showCategoryPicker(BuildContext context, TaskProvider provider) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0A0A12),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border(top: BorderSide(color: AppTheme.borderLight)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(
-              child: SizedBox(
-                width: 40,
-                height: 4,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppTheme.textPlaceholder,
-                    borderRadius: BorderRadius.all(Radius.circular(2)),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Move to Category',
-              style: TextStyle(
-                color: AppTheme.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...List.generate(AppTheme.categoryNames.length, (i) {
-              return ListTile(
-                leading: Icon(
-                  Icons.folder_outlined,
-                  color: AppTheme.categoryColors[i],
-                  size: 22,
-                ),
-                title: Text(
-                  AppTheme.categoryNames[i],
-                  style: const TextStyle(color: AppTheme.textPrimary),
-                ),
-                onTap: () {
-                  for (final id in provider.selectedIds) {
-                    final idx = provider.tasks.indexWhere((t) => t.id == id);
-                    if (idx >= 0) {
-                      final updated = provider.tasks[idx].copyWith(categoryIndex: i);
-                      provider.updateTask(updated);
-                    }
-                  }
-                  provider.cancelSelectMode();
-                  Navigator.pop(ctx);
-                },
-              );
-            }),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
     );
   }
 

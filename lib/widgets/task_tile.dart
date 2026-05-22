@@ -74,6 +74,7 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
           icon: Icons.content_copy,
           label: 'Duplicate',
           onTap: () {
+            HapticService.light();
             provider.addTask(
               title: '[Copy] ${task.title}',
               description: task.description,
@@ -82,14 +83,7 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
               categoryIndex: task.categoryIndex,
               tags: List.from(task.tags),
             );
-            HapticService.light();
           },
-        ),
-        ContextMenuOption(
-          icon: Icons.drive_file_move_outline,
-          label: 'Move',
-          onTap: () => _showMoveCategoryPicker(context, provider, task),
-          showDividerAbove: true,
         ),
         ContextMenuOption(
           icon: Icons.flag_outlined,
@@ -98,28 +92,17 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
         ),
         ContextMenuOption(
           icon: Icons.alarm_add_outlined,
-          label: 'Add Reminder',
-          onTap: () {
-            HapticService.light();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Reminder set'),
-                backgroundColor: Color(0xFF0A0A12),
-              ),
-            );
-          },
+          label: 'Set Reminder',
+          onTap: () => _showReminderPicker(context, provider, task),
         ),
         ContextMenuOption(
           icon: Icons.archive_outlined,
-          label: 'Archive',
+          label: task.isArchived ? 'Unarchive' : 'Archive',
+          color: task.isArchived ? AppTheme.accentGreen : null,
           onTap: () {
             HapticService.medium();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Task archived'),
-                backgroundColor: Color(0xFF0A0A12),
-              ),
-            );
+            final updated = task.copyWith(isArchived: !task.isArchived);
+            provider.updateTask(updated);
           },
           showDividerAbove: true,
         ),
@@ -133,65 +116,35 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
     );
   }
 
-  void _showMoveCategoryPicker(BuildContext context, TaskProvider provider, Task task) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0A0A12),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border(top: BorderSide(color: AppTheme.borderLight)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(
-              child: SizedBox(
-                width: 40,
-                height: 4,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppTheme.textPlaceholder,
-                    borderRadius: BorderRadius.all(Radius.circular(2)),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Move to Category',
-              style: TextStyle(
-                color: AppTheme.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...List.generate(AppTheme.categoryNames.length, (i) {
-              return ListTile(
-                leading: Icon(
-                  Icons.folder_outlined,
-                  color: AppTheme.categoryColors[i],
-                  size: 22,
-                ),
-                title: Text(
-                  AppTheme.categoryNames[i],
-                  style: const TextStyle(color: AppTheme.textPrimary),
-                ),
-                onTap: () {
-                  final updated = task.copyWith(categoryIndex: i);
-                  provider.updateTask(updated);
-                  HapticService.light();
-                  Navigator.pop(ctx);
-                },
-              );
-            }),
-            const SizedBox(height: 20),
-          ],
-        ),
+  void _showReminderPicker(BuildContext context, TaskProvider provider, Task task) async {
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: this.context,
+      initialDate: task.reminderTime ?? now,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    if (date == null || !mounted) return;
+
+    final time = await showTimePicker(
+      context: this.context,
+      initialTime: task.reminderTime != null
+          ? TimeOfDay.fromDateTime(task.reminderTime!)
+          : const TimeOfDay(hour: 9, minute: 0),
+    );
+    if (time == null || !mounted) return;
+
+    final reminderTime = DateTime(
+      date.year, date.month, date.day, time.hour, time.minute,
+    );
+    final updated = task.copyWith(reminderTime: reminderTime);
+    provider.updateTask(updated);
+    HapticService.light();
+    if (!mounted) return;
+    ScaffoldMessenger.of(this.context).showSnackBar(
+      SnackBar(
+        content: Text('Reminder set for ${DateFormat('MMM d, HH:mm').format(reminderTime)}'),
+        backgroundColor: const Color(0xFF0A0A12),
       ),
     );
   }
@@ -424,6 +377,30 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
                               ),
                             ),
                           ],
+                          if (task.isArchived) ...[
+                            const SizedBox(width: 12),
+                            Icon(
+                              Icons.archive_outlined,
+                              size: 12,
+                              color: AppTheme.accentAmber,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Archived',
+                              style: const TextStyle(
+                                color: AppTheme.accentAmber,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                          if (task.reminderTime != null) ...[
+                            const SizedBox(width: 12),
+                            Icon(
+                              Icons.alarm_outlined,
+                              size: 12,
+                              color: AppTheme.accentAmber,
+                            ),
+                          ],
                           if (task.subtasks.isNotEmpty) ...[
                             const SizedBox(width: 12),
                             Icon(
@@ -440,6 +417,19 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
                               ),
                             ),
                           ],
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              final updated = task.copyWith(isArchived: !task.isArchived);
+                              context.read<TaskProvider>().updateTask(updated);
+                              HapticService.light();
+                            },
+                            child: Icon(
+                              Icons.archive_outlined,
+                              size: 16,
+                              color: task.isArchived ? AppTheme.accentAmber : AppTheme.textPlaceholder,
+                            ),
+                          ),
                         ],
                       ),
                     ],
